@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        toolchain: [stable]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Build (warning-free)
+        run: cargo build --all-targets --release
+        env:
+          RUSTFLAGS: "-D warnings"
+
+      - name: Unit + integration tests
+        run: cargo test --release
+        env:
+          # Encrypted-vault fallback passphrase for keyring-less CI runners.
+          MCP_SHIELD_VAULT_PASSWORD: ci-test-vault-password
+          # Deterministic HITL mode for headless runners.
+          MCP_SHIELD_HITL: auto-deny
+
+      - name: Attack & performance self-test
+        run: cargo run --release -- verify
+        env:
+          MCP_SHIELD_VAULT_PASSWORD: ci-test-vault-password
+          MCP_SHIELD_HITL: auto-deny
+
+  package:
+    name: cargo package
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Validate crates.io packaging
+        run: cargo package --allow-dirty --no-verify --list
+
+  audit:
+    name: cargo audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Audit dependencies
+        run: cargo audit

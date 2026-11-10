@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-jira"],
+      "env": {
+        "JIRA_API_TOKEN": "demo-jira-token-0123456789abcdefNOTREAL"
+      }
+    },
+    "snowflake": {
+      "command": "uvx",
+      "args": ["mcp-server-snowflake"],
+      "env": {
+        "SNOWFLAKE_PASSWORD": "DemoOnlyPassword123!NotReal"
+      }
+    }
+  },
+  "projects": {}
+}

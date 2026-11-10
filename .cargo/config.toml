@@ -1,0 +1,4 @@
+# The workstation has no MinGW gcc / MSVC available; use the rust-lld linker
+# that ships with the x86_64-pc-windows-gnu toolchain.
+[target.x86_64-pc-windows-gnu]
+linker = "rust-lld"

@@ -1,0 +1,17 @@
+# Rust
+/target
+**/*.rs.bk
+
+# mcp-shield runtime state (never commit local audit logs / vaults / backups)
+*.jsonl
+*.lock/
+.shield-state/
+.mcp-shield/
+*.bak.*
+*.entry
+salt.bin
+
+# OS noise
+Thumbs.db
+.DS_Store
+desktop.ini
